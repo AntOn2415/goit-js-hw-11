@@ -1,7 +1,8 @@
 
 import Notiflix from 'notiflix';
-// import SimpleLightbox from "simplelightbox";
-// import "simplelightbox/dist/simple-lightbox.min.css";
+import SimpleLightbox from "simplelightbox";
+
+import "simplelightbox/dist/simple-lightbox.min.css";
 import './css/styles.css';
 import {fetchGallery} from "./fetchGallery";
 
@@ -85,10 +86,10 @@ function renderGalleryList(data) {
   Notiflix.Notify.info(`Total: ${totalHits} images found. Total hits: ${total}`);
 }
 
-// new SimpleLightbox(".gallery a", {
-//   captions: true,
-//   captionsData: "alt",
-//   captionDelay: 250,
-// });
+new SimpleLightbox(".gallery a", {
+  captions: true,
+  captionsData: "alt",
+  captionDelay: 250,
+});
 
 
