@@ -1,7 +1,7 @@
 
 import Notiflix from 'notiflix';
-import SimpleLightbox from "simplelightbox";
-import "simplelightbox/dist/simple-lightbox.min.css";
+// import SimpleLightbox from "simplelightbox";
+// import "simplelightbox/dist/simple-lightbox.min.css";
 import './css/styles.css';
 import {fetchGallery} from "./fetchGallery";
 
@@ -44,25 +44,29 @@ function createGalleryMarkup(images) {
     .map(({ largeImageURL, webformatURL, tags, likes, views, comments, downloads }) => {
       // total, totalHits,
       return`
-      <a class="gallery__link" href="${largeImageURL}">
       <div class="photo-card">
-  <img src="${webformatURL}" alt="${tags}" loading="lazy" />
+      <a class="gallery__link" href="${largeImageURL}" target="_parent">
+      <img src="${webformatURL}" alt="${tags}" loading="lazy" />
   <div class="info">
     <p class="info-item">
-      <b>Likes</b>${likes}
+      <b>Likes</b>
+      ${likes}
     </p>
     <p class="info-item">
-      <b>Views</b>${views}
+      <b>Views</b>
+      ${views}
     </p>
     <p class="info-item">
-      <b>Comments</b>${comments}
+      <b>Comments</b>
+      ${comments}
     </p>
     <p class="info-item">
-      <b>Downloads</b>${downloads}
+      <b>Downloads</b>
+      ${downloads}
     </p>
   </div>
-</div>
-    </a>`;
+  </a>
+</div>`;
     })
     .join("");
 }
@@ -81,9 +85,10 @@ function renderGalleryList(data) {
   Notiflix.Notify.info(`Total: ${totalHits} images found. Total hits: ${total}`);
 }
 
-new SimpleLightbox(".gallery a", {
-  captions: true,
-  captionsData: "alt",
-  captionDelay: 250,
-});
+// new SimpleLightbox(".gallery a", {
+//   captions: true,
+//   captionsData: "alt",
+//   captionDelay: 250,
+// });
+
 
