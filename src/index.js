@@ -1,90 +1,89 @@
-import debounce from 'lodash.debounce';
+
 import Notiflix from 'notiflix';
-import { fetchCountries } from './fetchCountries';
+import SimpleLightbox from "simplelightbox";
+import "simplelightbox/dist/simple-lightbox.min.css";
 import './css/styles.css';
+import {fetchGallery} from "./fetchGallery";
 
-const DEBOUNCE_DELAY = 300;
-const searchBox = document.querySelector('#search-box');
-const countriesListRef = document.querySelector('.country-list');
-const countryInfoRef = document.querySelector('.country-info');
+const refs = {
+  form: document.querySelector('.search-form'),
+  // input: document.querySelector('input'),
+  galleryRef: document.querySelector('.gallery'),
+  button: document.querySelector('.load-more'),
+};
 
-searchBox.addEventListener('input', debounce(onSearch, DEBOUNCE_DELAY));
+refs.form.addEventListener('submit', onFormSubmit);
 
-function onSearch(e) {
-  const searchQuery = e.target.value.trim();
+function onFormSubmit(e) {
+  e.preventDefault();
+  const searchQuery = e.target[0].value.trim();
 
   if (!searchQuery) {
-    countriesListRef.innerHTML = '';
-    countryInfoRef.innerHTML = '';
+    refs.galleryRef.innerHTML = '';
     return;
   }
 
-  fetchCountries(searchQuery)
-    .then(data => {
-      if (data.length > 10) {
-        Notiflix.Notify.info(
-          'Too many matches found. Please enter a more specific name.'
-        );
-        throw new Error('errorOverflow');
-      }
-      return data;
-    })
-    .then(countries => {
-      if (countries.length >= 2 || countries.length <= 10) {
-        renderCountriesList(countries);
-      }
-      return countries;
-    })
-    .then(countries => {
-      if (countries.length === 1) {
-        renderCountryInfo(Object.values(countries));
-      }
-    })
-    .catch(error => {
-      if (error.message === 'errorOverflow') {
-      } else {
-        onFetchError();
-      }
-    });
+fetchGallery(searchQuery)
+.then(data => {
+  const { total, totalHits, hits } = data;
+  return { total, totalHits, hits };
+})
+  .then(data => {
+    return renderGalleryList(data);
+  })
+  .catch(
+    onFetchError)
 }
 
 function onFetchError() {
-  Notiflix.Notify.failure('Oops, there is no country with that name');
+  Notiflix.Notify.failure("Sorry, there are no images matching your search query. Please try again.");
 }
 
-function createCountriesListMarkup(fetchCountries) {
-  return fetchCountries
-    .map(({ flags, name }) => {
-      return `<li class="country-list__item"><img class="country-flag" src="${flags.svg}"><h2 class="country-list__title">${name.official}</h2></li>`;
+function createGalleryMarkup(images) {
+  return images
+    .map(({ largeImageURL, webformatURL, tags, likes, views, comments, downloads }) => {
+      // total, totalHits,
+      return`
+      <a class="gallery__link" href="${largeImageURL}">
+      <div class="photo-card">
+  <img src="${webformatURL}" alt="${tags}" loading="lazy" />
+  <div class="info">
+    <p class="info-item">
+      <b>Likes</b>${likes}
+    </p>
+    <p class="info-item">
+      <b>Views</b>${views}
+    </p>
+    <p class="info-item">
+      <b>Comments</b>${comments}
+    </p>
+    <p class="info-item">
+      <b>Downloads</b>${downloads}
+    </p>
+  </div>
+</div>
+    </a>`;
     })
-    .join('');
+    .join("");
 }
 
-function createCountryInfoMarkup(fetchCountries) {
-  return fetchCountries
-    .map(({ flags, name, capital, population, languages }) => {
-      const languagesString = Object.values(languages).join(',');
-      return `<div class="card-title-wrapper">
-      <img class="country-flag" src="${flags.svg}" alt="${name.official}">
-      <h2 class="card-title">${name.official}</h2>
-    </div>
-    <div class="card-body">
-    <p><span class="title-arguments">Capital:</span> ${capital[0]}</p>
-    <p><span class="title-arguments">Population:</span> ${population}</p>
-    <p><span class="title-arguments">languages:</span> ${languagesString}</p>
-    </div>`;
-    })
-    .join('');
+// function renderGalleryList(data) {
+//   const markup = createGalleryMarkup(data);
+//   refs.galleryRef.innerHTML = markup;
+// };
+
+function renderGalleryList(data) {
+  const { total, totalHits, hits } = data;
+  const markup = createGalleryMarkup(hits);
+  refs.galleryRef.innerHTML = markup;
+
+  // Виведення загальної кількості знайдених зображень та загальної кількості відповідей
+  Notiflix.Notify.info(`Total: ${totalHits} images found. Total hits: ${total}`);
 }
 
-function renderCountriesList(data) {
-  const markup = createCountriesListMarkup(data);
-  countriesListRef.innerHTML = markup;
-  countryInfoRef.innerHTML = '';
-}
+new SimpleLightbox(".gallery a", {
+  captions: true,
+  captionsData: "alt",
+  captionDelay: 250,
+});
 
-function renderCountryInfo(data) {
-  const markup = createCountryInfoMarkup(data);
-  countryInfoRef.innerHTML = markup;
-  countriesListRef.innerHTML = '';
-}
