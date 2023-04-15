@@ -4,42 +4,51 @@ import SimpleLightbox from "simplelightbox";
 
 import "simplelightbox/dist/simple-lightbox.min.css";
 import './css/styles.css';
-import {fetchGallery} from "./fetchGallery";
+import {NewsApiService} from "./newsApiService";
 
 const refs = {
   form: document.querySelector('.search-form'),
-  // input: document.querySelector('input'),
   galleryRef: document.querySelector('.gallery'),
   button: document.querySelector('.load-more'),
 };
 
+const newsApiService = new NewsApiService()
+console.log("🚀 ~ file: index.js:17 ~ newsApiService:", newsApiService)
+
 refs.form.addEventListener('submit', onFormSubmit);
+refs.button.addEventListener('click', onloadMore)
 
 function onFormSubmit(e) {
   e.preventDefault();
-  const searchQuery = e.target[0].value.trim();
 
-  if (!searchQuery) {
+  newsApiService.resetPage();
+  newsApiService.query = e.target.elements.searchQuery.value.trim();
+
+  if (!newsApiService.query) {
     refs.galleryRef.innerHTML = '';
+
     return;
   }
 
-fetchGallery(searchQuery)
-.then(data => {
-  const { total, totalHits, hits } = data;
-  return { total, totalHits, hits };
-})
+  newsApiService.xhrGallery()
   .then(data => {
+    clearGalleryList()
     return renderGalleryList(data);
   })
-  .catch(
-    onFetchError)
+  .catch(error => {
+    if (error.message === "No images found") {
+      onFetchError()
+    } 
+  });
 }
 
 function onFetchError() {
   Notiflix.Notify.failure("Sorry, there are no images matching your search query. Please try again.");
 }
 
+function onloadMore(){
+  newsApiService.xhrGallery().then(renderGalleryList);
+}
 function createGalleryMarkup(images) {
   return images
     .map(({ largeImageURL, webformatURL, tags, likes, views, comments, downloads }) => {
@@ -72,21 +81,17 @@ function createGalleryMarkup(images) {
     .join("");
 }
 
-// function renderGalleryList(data) {
-//   const markup = createGalleryMarkup(data);
-//   refs.galleryRef.innerHTML = markup;
-// };
-
 function renderGalleryList(data) {
   const { total, totalHits, hits } = data;
   const markup = createGalleryMarkup(hits);
   refs.galleryRef.innerHTML = markup;
 
-  // Виведення загальної кількості знайдених зображень та загальної кількості відповідей
-  Notiflix.Notify.info(`Total: ${totalHits} images found. Total hits: ${total}`);
+  Notiflix.Notify.info(`Hooray! We found ${totalHits} images.`);
 }
-
-new SimpleLightbox(".gallery a", {
+function clearGalleryList() {
+  refs.galleryRef.innerHTML = '';
+}
+new SimpleLightbox(".photo-card a", {
   captions: true,
   captionsData: "alt",
   captionDelay: 250,

@@ -114,3 +114,35 @@ img {
 }
 
 
+.load-more {
+  border: none;
+  margin-left: auto;
+  margin-right: auto;
+  min-width: 100px;
+  height: 40px;
+  padding: 13px 0;
+  display: flex;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 4px;
+  font-family: inherit;
+  align-items: center;
+  /* font-weight: $font-weight-more;
+  font-size: $font-size-more; */
+  letter-spacing: 0.06em;
+  
+  transition: background-color 250ms var(--timing-function);
+  background-color: #5e61c7;
+  color: #fff;
+
+}
+.load-more:hover,
+.load-more:focus {
+  background-color: #4e53dc;;
+  box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.15);
+}
+
+
+.load-more .is-hiden {
+  display: none;
+}
