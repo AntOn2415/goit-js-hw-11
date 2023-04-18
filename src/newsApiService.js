@@ -7,15 +7,6 @@ class NewsApiService {
     this.page = 1;
   }
 
-  // xhrGallery() {
-    // return axios.get(`${BASE_URL}?key=${apiKey}&q=${this.searchQuery}&image_type=photo&orientation=horizontal&safesearch=true&per_page=40&page=${this.page}`)
-    // .then(response=>{
-      
-    //   this.incrementPage();
-    //   return response.data
-    // })
-    // }
-
   async xhrGallery() {
     try {
       const response = await axios.get(`${BASE_URL}?key=${apiKey}&q=${this.searchQuery}&image_type=photo&orientation=horizontal&safesearch=true&per_page=40&page=${this.page}`);

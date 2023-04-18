@@ -32,32 +32,11 @@ async function onFormSubmit(e) {
   refs.galleryRef.innerHTML = '';
 
   if (!newsApiService.query) {
-    refs.galleryRef.innerHTML = '';
+    // refs.galleryRef.innerHTML = '';
     loadMoreBtn.hide();
     return;
   }
   
-//   newsApiService.xhrGallery()
-//   .then(data => {
-//     if(data.hits.length === 0) {
-//       throw new Error("No images found");
-//     }
-//     return data
-//   })
-//   .then(data => {
-//     clearGalleryList()
-//     loadMoreBtn.enable()  
-    
-//     return renderGalleryList(data);
-//   })
-//   .catch(error => {
-//     if (error.message === "No images found") {
-//       loadMoreBtn.hide();
-//       onFetchError()
-//     } 
-//   });
-// }
-
 try {
   const data = await newsApiService.xhrGallery();
   if (data.hits.length === 0) {
@@ -86,6 +65,7 @@ function endOfSearchResults() {
 async function onloadMore(){
   try {
     loadMoreBtn.disabled();
+   
     const data = await newsApiService.xhrGallery();
     if(data.hits.length === 0){
       endOfSearchResults();
@@ -94,6 +74,7 @@ async function onloadMore(){
       renderGalleryList(data);
       loadMoreBtn.enable();
       newSimple.refresh();
+      scrollToNewGallery()
     }
   }
   catch(error){
@@ -134,7 +115,7 @@ function createGalleryMarkup(images) {
 function renderGalleryList(data) {
   const { totalHits, hits } = data;
   const markup = createGalleryMarkup(hits);
-  refs.galleryRef.innerHTML = markup;
+  refs.galleryRef.innerHTML += markup;
 newSimple.refresh()
 
   Notiflix.Notify.success(`Hooray! We found ${totalHits} images.`);
@@ -149,4 +130,14 @@ const newSimple = new SimpleLightbox(".photo-card a", {
   captionDelay: 250,
 });
 
+function scrollToNewGallery(){
+  const { height: cardHeight } = document
+  .querySelector(".gallery")
+  .firstElementChild.getBoundingClientRect();
+  
+  window.scrollBy({
+  top: cardHeight,
+  behavior: "smooth",
+  });
+}
 
