@@ -2,57 +2,107 @@
 import Notiflix from 'notiflix';
 import SimpleLightbox from "simplelightbox";
 
+import {NewsApiService} from "./newsApiService";
+import {LoadMoreBtn} from "./load-more-btn";
+
 import "simplelightbox/dist/simple-lightbox.min.css";
 import './css/styles.css';
-import {NewsApiService} from "./newsApiService";
 
 const refs = {
-  form: document.querySelector('.search-form'),
+  form: document.querySelector('#search-form'),
   galleryRef: document.querySelector('.gallery'),
-  button: document.querySelector('.load-more'),
 };
 
-const newsApiService = new NewsApiService()
-console.log("🚀 ~ file: index.js:17 ~ newsApiService:", newsApiService)
+const newsApiService = new NewsApiService();
+
+const loadMoreBtn = new LoadMoreBtn({ selector: '.load-more',
+hidden: true });
 
 refs.form.addEventListener('submit', onFormSubmit);
-refs.button.addEventListener('click', onloadMore)
+loadMoreBtn.refs.button.addEventListener('click', onloadMore)
 
-function onFormSubmit(e) {
+async function onFormSubmit(e) {
   e.preventDefault();
 
+  loadMoreBtn.show();
+  loadMoreBtn.disabled();
   newsApiService.resetPage();
   newsApiService.query = e.target.elements.searchQuery.value.trim();
 
+  refs.galleryRef.innerHTML = '';
+
   if (!newsApiService.query) {
     refs.galleryRef.innerHTML = '';
-
+    loadMoreBtn.hide();
     return;
   }
+  
+//   newsApiService.xhrGallery()
+//   .then(data => {
+//     if(data.hits.length === 0) {
+//       throw new Error("No images found");
+//     }
+//     return data
+//   })
+//   .then(data => {
+//     clearGalleryList()
+//     loadMoreBtn.enable()  
+    
+//     return renderGalleryList(data);
+//   })
+//   .catch(error => {
+//     if (error.message === "No images found") {
+//       loadMoreBtn.hide();
+//       onFetchError()
+//     } 
+//   });
+// }
 
-  newsApiService.xhrGallery()
-  .then(data => {
-    clearGalleryList()
-    return renderGalleryList(data);
-  })
-  .catch(error => {
-    if (error.message === "No images found") {
-      onFetchError()
-    } 
-  });
+try {
+  const data = await newsApiService.xhrGallery();
+  if (data.hits.length === 0) {
+    throw new Error("No images found");
+  }
+  clearGalleryList();
+  loadMoreBtn.enable();
+  renderGalleryList(data);
+} catch (error) {
+  if (error.message === "No images found") {
+    loadMoreBtn.hide();
+    onFetchError();
+  }
 }
+}
+
 
 function onFetchError() {
   Notiflix.Notify.failure("Sorry, there are no images matching your search query. Please try again.");
-}
+};
 
-function onloadMore(){
-  newsApiService.xhrGallery().then(renderGalleryList);
-}
+function endOfSearchResults() {
+  Notiflix.Notify.info("We're sorry, but you've reached the end of search results.");
+};
+
+async function onloadMore(){
+  try {
+    loadMoreBtn.disabled();
+    const data = await newsApiService.xhrGallery();
+    if(data.hits.length === 0){
+      endOfSearchResults();
+      loadMoreBtn.hide();
+    } else {
+      renderGalleryList(data);
+      loadMoreBtn.enable();
+      newSimple.refresh();
+    }
+  }
+  catch(error){
+  }
+  }
+
 function createGalleryMarkup(images) {
   return images
     .map(({ largeImageURL, webformatURL, tags, likes, views, comments, downloads }) => {
-      // total, totalHits,
       return`
       <div class="photo-card">
       <a class="gallery__link" href="${largeImageURL}" target="_parent">
@@ -82,18 +132,20 @@ function createGalleryMarkup(images) {
 }
 
 function renderGalleryList(data) {
-  const { total, totalHits, hits } = data;
+  const { totalHits, hits } = data;
   const markup = createGalleryMarkup(hits);
   refs.galleryRef.innerHTML = markup;
+newSimple.refresh()
 
-  Notiflix.Notify.info(`Hooray! We found ${totalHits} images.`);
+  Notiflix.Notify.success(`Hooray! We found ${totalHits} images.`);
 }
+
 function clearGalleryList() {
   refs.galleryRef.innerHTML = '';
 }
-new SimpleLightbox(".photo-card a", {
+
+const newSimple = new SimpleLightbox(".photo-card a", {
   captions: true,
-  captionsData: "alt",
   captionDelay: 250,
 });
 
