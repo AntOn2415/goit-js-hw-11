@@ -33,7 +33,6 @@ class LoadMoreBtn {
   hide() {
     this.refs.button.classList.add('is-hidden');
   }
-
 }
 
 export { LoadMoreBtn };
