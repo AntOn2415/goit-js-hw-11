@@ -13,6 +13,7 @@ const refs = {
 };
 
 const newsApiService = new NewsApiService();
+let isFirstSubmit = true;
 
 const loadMoreBtn = new LoadMoreBtn({ selector: '.load-more', hidden: true });
 
@@ -26,8 +27,7 @@ async function onFormSubmit(e) {
   loadMoreBtn.disabled();
   newsApiService.resetPage();
   newsApiService.query = e.target.elements.searchQuery.value.trim();
-
-  refs.galleryRef.innerHTML = '';
+  clearGalleryList();
 
   if (!newsApiService.query) {
     loadMoreBtn.hide();
@@ -42,6 +42,17 @@ async function onFormSubmit(e) {
     clearGalleryList();
     loadMoreBtn.enable();
     renderGalleryList(data);
+
+    if (isFirstSubmit) {
+      onSearchResults(data);
+      isFirstSubmit = false;
+    }
+    
+    if (data.hits.length < 40) {
+      loadMoreBtn.hide();
+    } else {
+      loadMoreBtn.show();
+    }
   } catch (error) {
     if (error.message === 'No images found') {
       loadMoreBtn.hide();
@@ -121,12 +132,15 @@ function createGalleryMarkup(images) {
 }
 
 function renderGalleryList(data) {
-  const { totalHits, hits } = data;
+  const { hits } = data;
   const markup = createGalleryMarkup(hits);
   refs.galleryRef.innerHTML += markup;
   newSimple.refresh();
+}
 
-  Notiflix.Notify.success(`Hooray! We found ${totalHits} images.`);
+function onSearchResults(data) {
+  const { totalHits } = data;
+  Notiflix.Notify.success(`Hooray! We found ${totalHits} images.`)
 }
 
 function clearGalleryList() {
